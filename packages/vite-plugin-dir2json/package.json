@@ -1,0 +1,33 @@
+{
+  "name": "vite-plugin-dir2json",
+  "version": "1.0.0",
+  "description": "Convert the directory structure into json data containing supported file paths",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "*.d.ts",
+    "dist"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsup"
+  },
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "dir2json",
+    "simple",
+    "json"
+  ],
+  "author": "buddywang",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "tsup": "^8.0.2"
+  },
+  "peerDependencies": {
+    "vite": ">=4.0.0"
+  }
+}
