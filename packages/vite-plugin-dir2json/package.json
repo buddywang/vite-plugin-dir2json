@@ -22,6 +22,7 @@
     "json"
   ],
   "author": "buddywang",
+  "repository": "https://github.com/buddywang/vite-plugin-dir2json",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.12.11",
