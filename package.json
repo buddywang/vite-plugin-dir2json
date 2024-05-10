@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev:vue-demo": "pnpm -F vite-vue-demo dev",
-    "build:dir2json": "pnpm -F vite-plugin-dir2json build"
+    "build:dir2json": "pnpm -F vite-plugin-dir2json build",
+    "publish:dir2json": "pnpm -F vite-plugin-dir2json publish"
   },
   "keywords": [],
   "author": "buddywang",
