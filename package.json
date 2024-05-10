@@ -3,7 +3,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:vue-demo": "pnpm -F vite-vue-demo dev",
+    "build:dir2json": "pnpm -F vite-plugin-dir2json build"
   },
   "keywords": [],
   "author": "buddywang",

@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import path from "path";
 import { readdir } from "fs/promises";
-import { ResolvedConfig, Plugin } from "vite";
+import type { ResolvedConfig, PluginOption } from "vite";
 
 // constant
 const supportImageExt = [
@@ -47,7 +47,7 @@ const isSupportExt = (fileName: string) => {
 const isFileName = (str: string) => str.includes(".");
 const getFileNameNotExt = (str: string) => str.split(".").shift() || "";
 
-export default function vitePluginDir2Json(): Plugin {
+export function dir2json(): PluginOption {
   let root: string;
   let realImporter: string;
   let realSource: string;
@@ -157,3 +157,5 @@ export default function vitePluginDir2Json(): Plugin {
     },
   };
 }
+
+export default dir2json;

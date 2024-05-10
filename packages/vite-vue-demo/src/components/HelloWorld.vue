@@ -1,14 +1,38 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from "vue";
+import homeJson from "../assets/home?dir2json";
 
-defineProps<{ msg: string }>()
+defineProps<{ msg: string }>();
 
-const count = ref(0)
+const isMobile = () => {
+  let userAgentInfo = navigator.userAgent;
+  let Agents = [
+    "Android",
+    "iPhone",
+    "SymbianOS",
+    "Windows Phone",
+    "iPad",
+    "iPod",
+  ];
+  let getArr = Agents.filter((i) => userAgentInfo.includes(i));
+  return getArr.length ? true : false;
+};
+
+const videoData = isMobile() ? homeJson.h5 : homeJson.pc;
+console.log(333, homeJson);
+
+const count = ref(0);
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
+  <video
+    autoplay
+    muted
+    :src="videoData.home1.home1"
+    style="width: 100%"
+  ></video>
 
+  <h1>{{ msg }}</h1>
   <div class="card">
     <button type="button" @click="count++">count is {{ count }}</button>
     <p>
