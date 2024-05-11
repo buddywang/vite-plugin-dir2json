@@ -1,8 +1,8 @@
 # Vite Plugin Dir2json
 
 ![npm](https://img.shields.io/npm/dt/vite-plugin-dir2json?style=flat-square)
-![GitHub package.json version](https://img.shields.io/github/package-json/v/UstymUkhman/vite-plugin-dir2json?color=brightgreen&style=flat-square)
-![GitHub](https://img.shields.io/github/license/UstymUkhman/vite-plugin-dir2json?color=brightgreen&style=flat-square)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/buddywang/vite-plugin-dir2json?color=brightgreen&style=flat-square)
+![GitHub](https://img.shields.io/github/license/buddywang/vite-plugin-dir2json?color=brightgreen&style=flat-square)
 
 # Feature
 
