@@ -22,8 +22,7 @@
     "../../README.md"
   ],
   "scripts": {
-    "build": "tsup",
-    "publish": "npm publish --registry=https://registry.npmjs.org/"
+    "build": "tsup"
   },
   "keywords": [
     "vite",
