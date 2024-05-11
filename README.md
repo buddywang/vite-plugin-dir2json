@@ -40,7 +40,38 @@ console.log(homeJson);
 // };
 ```
 
-# Install
+Here are the file extensions supported by default, you can add additional extensions using the options
+
+```ts
+const supportImageExt = [
+  ".apng",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".jfig",
+  ".pjepg",
+  ".pjp",
+  ".gif",
+  ".svg",
+  ".ico",
+  ".avif",
+];
+const supportMediaExt = [
+  ".mp4",
+  ".webm",
+  ".ogg",
+  ".mp3",
+  ".wav",
+  ".flac",
+  ".aac",
+  ".opus",
+  ".mov",
+];
+```
+
+# How to use
+
+## Install
 
 ```bash
 # using npm
@@ -51,9 +82,7 @@ pnpm install -D vite-plugin-dir2json
 yarn add --dev vite-plugin-dir2json
 ```
 
-# Usage
-
-## vite config
+## Vite config
 
 ```js
 import { defineConfig } from "vite";
@@ -62,8 +91,19 @@ import dir2json from "vite-plugin-dir2json";
 // https://vitejs.dev/config/
 export default defineConfig({
   // ...
-  plugins: [dir2json()],
+  plugins: [dir2json(/* options */)],
 });
+```
+
+## Options
+
+```ts
+export interface Dir2jsonOptions {
+  /**
+   * Additional support for file extensions
+   */
+  ext: string[];
+}
 ```
 
 ## With typescript
@@ -85,12 +125,10 @@ declare module "*?dir2json" {
 // ...
 ```
 
-## how to use
+## [Example](./packages/vite-vue-demo/README.md)
 
 ```ts
 import dirJson from "../path/to/dir?dir2json";
 
 console.log("dirJson>>>", dirJson);
 ```
-
-## [Example](./packages/vite-vue-demo/README.md)

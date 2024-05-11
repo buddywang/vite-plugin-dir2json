@@ -30,30 +30,45 @@ const supportMediaExt = [
 ];
 
 // helper
-const isSupportExt = (fileName: string) => {
-  let res = false;
-  supportImageExt.forEach((item) => {
-    if (fileName.includes(item)) {
-      res = true;
-    }
-  });
-  supportMediaExt.forEach((item) => {
-    if (fileName.includes(item)) {
-      res = true;
-    }
-  });
-  return res;
-};
 const isFileName = (str: string) => str.includes(".");
 const getFileNameNotExt = (str: string) => str.split(".").shift() || "";
 
-export function dir2json(): PluginOption {
+export interface Dir2jsonOptions {
+  /**
+   * Additional support for file extensions
+   */
+  ext: string[];
+}
+
+export function dir2json(options?: Dir2jsonOptions): PluginOption {
   let root: string;
   let realImporter: string;
   let realSource: string;
   let importStr = "";
   const replaceTag = "¥¥";
   let pluginContext: any;
+
+  const isSupportExt = (fileName: string) => {
+    let res = false;
+    supportImageExt.forEach((item) => {
+      if (fileName.includes(item)) {
+        res = true;
+      }
+    });
+    supportMediaExt.forEach((item) => {
+      if (fileName.includes(item)) {
+        res = true;
+      }
+    });
+    if (options?.ext) {
+      options.ext.forEach((item) => {
+        if (fileName.includes(item)) {
+          res = true;
+        }
+      });
+    }
+    return res;
+  };
 
   // Recursively traverse directory and assemble json data
   const traverseDir = async (
