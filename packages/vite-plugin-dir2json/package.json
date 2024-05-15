@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-dir2json",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Convert the directory structure into json data containing supported file paths",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -31,6 +31,9 @@
   "author": "buddywang",
   "repository": "https://github.com/buddywang/vite-plugin-dir2json",
   "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "devDependencies": {
     "@types/node": "^20.12.11",
     "local-pkg": "^0.5.0",
