@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import homeJson from "../assets/home?dir2json";
+// When the directory names are the same, add `&1` to distinguish different types
+import otherHomeJson from "../assets/test/home?dir2json&1";
 
 defineProps<{ msg: string }>();
 
@@ -19,7 +21,6 @@ const isMobile = () => {
 };
 
 const videoData = isMobile() ? homeJson.h5 : homeJson.pc;
-console.log(333, homeJson);
 
 const count = ref(0);
 </script>
