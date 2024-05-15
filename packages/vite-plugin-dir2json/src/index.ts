@@ -1,15 +1,16 @@
 import { existsSync } from "node:fs";
 import path from "path";
-import { readdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import type { ResolvedConfig, PluginOption } from "vite";
 // todo(replace): too large bundle after 'isPackageExists' imported
 import { isPackageExists } from "local-pkg";
 import {
-  getFileNameNotExt,
-  isFileName,
   isSupportExt,
+  replaceTag,
+  setObject,
   supportImageExt,
   supportMediaExt,
+  traverseDir,
 } from "./utils";
 
 export interface Dir2jsonOptions {
@@ -30,8 +31,6 @@ export function dir2json(options: Dir2jsonOptions = {}): PluginOption {
   let mode: string;
   let pluginContext: any;
 
-  const replaceTag = "¥¥";
-
   // dts
   const dtsContext: {
     [key: string]: {
@@ -51,58 +50,6 @@ declare module "*dir2json" {
   const json: any;
   export default json;
 }`;
-
-  // Recursively traverse directory and assemble json data
-  const traverseDir = async (
-    dirPath: string,
-    record: { [key: string]: any },
-    importStatementArr: string[]
-  ) => {
-    let dirData = await readdir(dirPath);
-    for (let j = 0; j < dirData.length; j++) {
-      const name = dirData[j];
-
-      if (isFileName(name)) {
-        // file
-        if (
-          isSupportExt(name, [
-            ...supportImageExt,
-            ...supportMediaExt,
-            ...(options.ext || []),
-          ])
-        ) {
-          const fullPath = path.join(dirPath, name);
-          // remove root path
-          const absolutePath = fullPath.replace(root, "");
-
-          // The name of the imported variable
-          const importVarName = absolutePath
-            .replaceAll(path.sep, "_")
-            .replace(".", "_");
-
-          importStatementArr.push(
-            `import ${importVarName} from "${absolutePath}";`
-          );
-          const keyName = getFileNameNotExt(name);
-
-          // check duplicate names of files and directories
-          if (record[keyName]) {
-            pluginContext.error(
-              `files and directories with the same name are not allowed in the same directory：${absolutePath}`
-            );
-          }
-
-          // Add replaceTag, and remove the " " character from the variable in the final code string.
-          record[keyName] = `${replaceTag}${importVarName}${replaceTag}`;
-        }
-      } else {
-        // directory
-        const subDirPath = path.join(dirPath, name);
-        record[name] = {};
-        await traverseDir(subDirPath, record[name], importStatementArr);
-      }
-    }
-  };
 
   return {
     name: "vite-plugin-dir2json",
@@ -133,7 +80,7 @@ declare module "*dir2json" {
             absolutePath = path.join(path.dirname(importer || ""), source);
           }
 
-          // 1. Check if directory exists
+          // Check if directory exists
           const dirPath = absolutePath.split("?").shift()!;
           if (!existsSync(dirPath)) {
             pluginContext.error(
@@ -155,16 +102,44 @@ declare module "*dir2json" {
 
         // Recursively traverse directory and assemble json data
         const res = {};
-        const importStatementArr: string[] = [];
-        await traverseDir(dirPath, res, importStatementArr);
+        let importStr = "";
+        await traverseDir(dirPath, (filePath, rootDirPath) => {
+          if (
+            isSupportExt(filePath, [
+              ...supportImageExt,
+              ...supportMediaExt,
+              ...(options.ext || []),
+            ])
+          ) {
+            // 组装import 语句
+            const absolutePath = filePath.replace(root, "");
+            // The name of the imported variable
+            const importVarName = absolutePath
+              .replaceAll(path.sep, "_")
+              .replace(".", "_");
+
+            importStr += `import ${importVarName} from "${absolutePath}";\n`;
+
+            // 组装json
+            setObject(
+              res,
+              filePath.replace(rootDirPath, ""),
+              `${replaceTag}${importVarName}${replaceTag}`,
+              () => {
+                pluginContext.error(
+                  `files and directories with the same name are not allowed in the same directory：${absolutePath}`
+                );
+              }
+            );
+          }
+        });
 
         // return code string
         const dataCode = `${JSON.stringify(res, null, "  ")}`;
         const finalDataCode = dataCode
           .replaceAll(`"${replaceTag}`, "")
           .replaceAll(`${replaceTag}"`, "");
-
-        let code = `${importStatementArr.join("\n")} 
+        let code = `${importStr} 
 export default ${finalDataCode}`;
 
         // refresh dts file
@@ -175,7 +150,7 @@ export default ${finalDataCode}`;
             dataCode,
           };
 
-          // refresh dts file
+          // generate dts file
           let str = dtsFileHeader;
           const dtsContent = Object.values(dtsContext);
           dtsContent.forEach((item) => {
@@ -208,7 +183,7 @@ declare module "*${item.moduleTag}" {
           ];
 
           const importNameList = dir2jsonImportList.map((item) => item[1]);
-          const sideEffectCode = `window.dir2jsonSideEffect = [${importNameList.join(
+          const sideEffectCode = `\nwindow.dir2jsonSideEffect = [${importNameList.join(
             ","
           )}];`;
           const last = dir2jsonImportList[dir2jsonImportList.length - 1];
