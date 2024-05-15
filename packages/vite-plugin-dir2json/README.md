@@ -40,7 +40,7 @@ console.log(homeJson);
 // };
 ```
 
-Here are the file extensions supported by default, you can add additional extensions using the options
+Here are the file extensions supported by default, you can add additional extensions using the `options.ext`
 
 ```ts
 const supportImageExt = [
@@ -98,32 +98,51 @@ export default defineConfig({
 ## Options
 
 ```ts
-export interface Dir2jsonOptions {
+interface Dir2jsonOptions {
   /**
    * Additional support for file extensions
    */
-  ext: string[];
+  ext?: string[];
+  /**
+   * Filepath to generate corresponding .d.ts file.
+   * Defaults to './dir2json.d.ts' when `typescript` is installed locally.
+   * Set `false` to disable.
+   */
+  dts?: boolean | string;
 }
 ```
 
 ## With typescript
 
-add below to the top of a new `ext.d.ts` file or exists `dts` file
+When your project is a ts project, `vite-plugin-dir2json` will turn on ts support by default, and the `dir2json.d.ts` file will be automatically generated in the local development environment, allowing you to get the correct type prompts, as follows:
 
-```ts
-/// <reference types="vite-plugin-dir2json/ext" />
-```
+![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code2.png)
 
-or append below to a `dts` file
+In order to properly hint types for import-dir2json variable：
 
-```ts
-// ...
-declare module "*?dir2json" {
-  const src: { [key: string]: any };
-  export default src;
+1. Enable options.dts so that `dir2json.d.ts` file is automatically generated
+2. Make sure `dir2json.d.ts`'s path is include in tsconfig.json, as follows:
+
+```json
+// tsconfig.json
+{
+  // ...
+  "include": ["./dir2json.d.ts" /** ... */]
+  // ...
 }
-// ...
 ```
+
+3. run dev server(`npm run dev`), save the changes after add `imort xx from xxx?dir2json`, then the `dir2json.d.ts` file will be updated
+
+### Notice
+
+The automatically generated `dir2json.d.ts` looks like this:
+
+![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code3.png)
+
+As you can see, the last-level directory name and query parameter will be used as the module name, so when the last-level directory name is the same, in order to prevent type declaration overwriting, you can add the query parameter to ensure that the module name is unique, as follows `&1` :
+
+![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code4.png)
 
 ## [Example](./packages/vite-vue-demo/README.md)
 
