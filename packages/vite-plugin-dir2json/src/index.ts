@@ -30,6 +30,11 @@ export function dir2json(options: Dir2jsonOptions = {}): PluginOption {
   let root: string;
   let mode: string;
   let pluginContext: any;
+  const suportFileExtList = [
+    ...supportImageExt,
+    ...supportMediaExt,
+    ...(options.ext || []),
+  ];
 
   // dts
   const dtsContext: {
@@ -104,14 +109,8 @@ declare module "*dir2json" {
         const res = {};
         let importStr = "";
         await traverseDir(dirPath, (filePath, rootDirPath) => {
-          if (
-            isSupportExt(filePath, [
-              ...supportImageExt,
-              ...supportMediaExt,
-              ...(options.ext || []),
-            ])
-          ) {
-            // 组装import 语句
+          if (isSupportExt(filePath, suportFileExtList)) {
+            // assemble import statements
             const absolutePath = filePath.replace(root, "");
             // The name of the imported variable
             const importVarName = absolutePath
@@ -120,7 +119,7 @@ declare module "*dir2json" {
 
             importStr += `import ${importVarName} from "${absolutePath}";\n`;
 
-            // 组装json
+            // assemble json data
             setObject(
               res,
               filePath.replace(rootDirPath, ""),
@@ -144,6 +143,7 @@ export default ${finalDataCode}`;
 
         // refresh dts file
         if (!!dts) {
+          // the last-level directory name and query parameter will be used as the module name
           const moduleTag = id.split(path.sep).pop()!;
           dtsContext[moduleTag] = {
             moduleTag,
