@@ -26,7 +26,7 @@ export interface Dir2jsonOptions {
   dts?: boolean | string;
 }
 
-export function dir2json(options: Dir2jsonOptions = {}): PluginOption {
+function dir2json(options: Dir2jsonOptions = {}): PluginOption {
   let root: string;
   let mode: string;
   let pluginContext: any;

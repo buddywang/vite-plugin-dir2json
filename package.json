@@ -1,13 +1,47 @@
 {
-  "version": "1.0.5",
   "name": "vite-plugin-dir2json",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dev:vue-demo": "pnpm -F vite-vue-demo dev",
-    "build:dir2json": "pnpm -F vite-plugin-dir2json build"
+  "version": "1.0.5",
+  "description": "Convert the directory structure into json data containing supported file paths",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
   },
-  "keywords": [],
+  "type": "module",
+  "files": [
+    "*.d.ts",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "pnpm build && pnpm -F vite-vue-demo dev",
+    "debug": "pnpm -F vite-vue-demo debug"
+  },
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "dir2json",
+    "simple",
+    "json"
+  ],
   "author": "buddywang",
-  "license": "MIT"
+  "repository": "https://github.com/buddywang/vite-plugin-dir2json",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "local-pkg": "^0.5.0",
+    "tsup": "^8.0.2"
+  },
+  "peerDependencies": {
+    "vite": ">=2.x"
+  }
 }

@@ -5,9 +5,9 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "debug demo dev",
+      "name": "debug",
       "request": "launch",
-      "runtimeArgs": ["run-script", "dev:vue-demo"],
+      "runtimeArgs": ["run-script", "debug"],
       "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
       "type": "node"
