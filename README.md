@@ -6,7 +6,27 @@
 
 # Feature
 
-> Convert the directory structure into json data containing supported file paths.
+- [x] Convert the directory structure into json data containing supported file paths.
+- [ ] 默认返回静态路径，支持通过 `lazy` query 指定返回动态 import
+
+```js
+import homeJson from "/path/to/home?dir2json&lazy";
+```
+
+- [ ] 支持通过 query 或 options 自定义文件格式过滤，`ext`和`extg`query 会覆盖默认支持的 ext 列表
+
+```js
+import homeJson from "/path/to/home?dir2json&ext=.vue,.ts&lazy";
+// 或者自定义的文件后缀太多，可以通过extgroup配置格式组，再通过extg query指定即可
+import homeJson from "/path/to/home?dir2json&extg=a&lazy";
+
+// vite.config.ts
+dir2json({
+  extGroup: {
+    a: [".vue", ".ts"],
+  },
+});
+```
 
 For example, for this structure of directory:
 

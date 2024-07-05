@@ -1,32 +1,6 @@
 import path from "path";
 import { readdir } from "node:fs/promises";
-
-// constant
-export const supportImageExt = [
-  ".apng",
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".jfig",
-  ".pjepg",
-  ".pjp",
-  ".gif",
-  ".svg",
-  ".ico",
-  ".avif",
-];
-export const supportMediaExt = [
-  ".mp4",
-  ".webm",
-  ".ogg",
-  ".mp3",
-  ".wav",
-  ".flac",
-  ".aac",
-  ".opus",
-  ".mov",
-];
-export const replaceTag = "¥¥";
+import { IQueryParam } from "./type";
 
 // helper
 export const isFileName = (str: string) => str.includes(".");
@@ -79,12 +53,14 @@ export const setObject = (
 
 /**
  * Recursively traverse directory, call cb to every file
- * @param dirPath directory
+ * @param dirPath directory Path
+ * @param extFilter trigger callback when file's ext in extFilter
  * @param cb callback func
- * @param rootDirPath root directory
+ * @param rootDirPath root directory path
  */
 export const traverseDir = async (
   dirPath: string,
+  extFilter: string[],
   cb: (filePath: string, rootDirPath: string) => void,
   rootDirPath?: string
 ) => {
@@ -99,11 +75,32 @@ export const traverseDir = async (
     if (isFileName(name)) {
       // file
       const filePath = path.join(dirPath, name);
-      cb(filePath, rootDirPath);
+      if (isSupportExt(filePath, extFilter)) {
+        cb(filePath, rootDirPath);
+      }
     } else {
       // directory
       const subDirPath = path.join(dirPath, name);
-      await traverseDir(subDirPath, cb, rootDirPath);
+      await traverseDir(subDirPath, extFilter, cb, rootDirPath);
     }
   }
+};
+
+/**
+ * decode queryStr, eg: input `dir2json&lazy&ext=.vue` return {dir2json: true, lazy:true, ext: ['.vue']}
+ * @param queryStr eg: `dir2json&lazy&ext=.vue`
+ * @returns param object
+ */
+export const decodeQuery = (queryStr: string) => {
+  const paramArr = queryStr.split("&");
+  let param: IQueryParam = {};
+  paramArr.forEach((item) => {
+    if (item.includes("=")) {
+      const [key, val] = item.split("=");
+      param[key] = val.split(",");
+    } else {
+      param[item] = true;
+    }
+  });
+  return param;
 };

@@ -1,8 +1,10 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import Inspect from "vite-plugin-inspect";
 import dir2json from "vite-plugin-dir2json";
 // @ts-ignore
 import dir2jsonOrigin from "../../src/index";
+import { fileURLToPath } from "url";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -12,6 +14,20 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    plugins: [vue(), pluginFunc()],
+    plugins: [
+      vue(),
+      Inspect(),
+      pluginFunc({
+        ext: [""],
+      }),
+    ],
+    resolve: {
+      alias: {
+        "@": fileURLToPath(new URL("./src", import.meta.url)),
+      },
+    },
+    build: {
+      minify: false,
+    },
   };
 });
