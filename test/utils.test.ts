@@ -32,14 +32,13 @@ describe("utils", () => {
     setObject(obj, "/22.webp", "val2", () => {});
     setObject(obj, "/22.webp", "val3", () => {});
     const expectObj = { aa: { bb: { "11": "val1" } }, "22": "val3" };
-    expect(JSON.stringify(obj)).toBe(JSON.stringify(expectObj));
+    expect(obj).toEqual(expectObj);
   });
 
   it("traverseDir", async () => {
     const rootDir = path.resolve("");
     const testDirPath = path.join(rootDir, "./test");
 
-    // const
     let path1 = "",
       path2 = "";
     const expectPath1 = path.join(rootDir, "./test/utils.test.ts");
@@ -58,10 +57,10 @@ describe("utils", () => {
   it("decodeQuery", () => {
     const queryObj = decodeQuery("dir2json&lazy&ext=.vue,.ts");
     const expectObj = { dir2json: true, lazy: true, ext: [".vue", ".ts"] };
-    expect(JSON.stringify(queryObj)).toBe(JSON.stringify(expectObj));
+    expect(queryObj).toEqual(expectObj);
 
     const queryObj2 = decodeQuery("dir2json&lazy&extg=a");
     const expectObj2 = { dir2json: true, lazy: true, extg: ["a"] };
-    expect(JSON.stringify(queryObj2)).toBe(JSON.stringify(expectObj2));
+    expect(queryObj2).toEqual(expectObj2);
   });
 });
