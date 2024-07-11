@@ -21,7 +21,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "pnpm build && pnpm -F vite-vue-demo dev",
-    "debug": "pnpm -F vite-vue-demo debug"
+    "debug": "pnpm -F vite-vue-demo debug",
+    "test": "vitest"
   },
   "keywords": [
     "vite",
@@ -40,7 +41,8 @@
     "@types/node": "^20.12.11",
     "local-pkg": "^0.5.0",
     "tsup": "^8.0.2",
-    "vite-plugin-inspect": "^0.8.4"
+    "vite-plugin-inspect": "^0.8.4",
+    "vitest": "^2.0.2"
   },
   "peerDependencies": {
     "vite": ">=2.x"
