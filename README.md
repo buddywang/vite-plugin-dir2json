@@ -8,7 +8,7 @@
 
 # Feature
 
-- [x] Convert the directory structure into json data containing supported file paths.
+- [x] Convert the directory structure into json data containing specific file paths.
 - [x] By default, a static path is returned, and dynamic import can be returned by specifying a `lazy` query.
 
 ```js

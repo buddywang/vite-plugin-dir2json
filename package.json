@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-dir2json",
   "version": "1.1.0",
-  "description": "Convert the directory structure into json data containing supported file paths",
+  "description": "Convert the directory structure into json data containing specific file paths",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",

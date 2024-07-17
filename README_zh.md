@@ -6,7 +6,7 @@
 
 # 功能
 
-- [x] 将目录结构转换为包含所支持文件路径的 JSON 数据
+- [x] 将目录结构转换为包含指定后缀格式的文件路径的 JSON 数据
 - [x] 默认返回静态路径，支持通过 `lazy` query 指定返回动态 import
 - [x] 支持通过 query 或 options 自定义文件格式过滤，`ext`和`extg` query 会覆盖默认支持的 ext 列表
 
