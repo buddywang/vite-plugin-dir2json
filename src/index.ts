@@ -143,7 +143,15 @@ export default ${finalDataCode}`;
 
           // generate dts file
           let str = dtsFileHeader;
-          const dtsContent = Object.values(dtsContext);
+          // 优化: 保证 dtsContent 数组有序，保证dts文件结构稳定
+          const dtsContent = Object.keys(dtsContext)
+            .sort((a: string, b: string) => {
+              return a > b ? -1 : 1;
+            })
+            .map((key) => {
+              return dtsContext[key];
+            });
+
           dtsContent.forEach(({ moduleTag, jsonInterface }) => {
             str += `
 declare module "*${moduleTag}" {
@@ -167,16 +175,30 @@ declare module "*${moduleTag}" {
         // Add sideEffectCode in files using dir2json-import to avoid tree-shaking in development mode
         // For dts files generated in development mode
         if (mode == "development" && !!dts && code.includes("?dir2json")) {
+          // fix bug: 注释的行不用生成对应的类型声明
+          // fix bug: 更新正则
+          // (?<!\/\/\s*) 后行断言: 过滤注释行
+          // ['"];? 兼容不同格式的代码
+          // .*? 最小匹配（非贪婪）
           const dir2jsonImportList = [
-            ...code.matchAll(/import\s(.*?)\sfrom.*?dir2json.*?;/g),
+            ...code.matchAll(
+              /(?<!\/\/\s*)import\s(.*?)\sfrom.*?dir2json.*?['"];?/g
+            ),
           ];
 
-          const importNameList = dir2jsonImportList.map((item) => item[1]);
-          const sideEffectCode = `\nwindow.dir2jsonSideEffect = [${importNameList.join(
-            ","
-          )}];`;
-          const last = dir2jsonImportList[dir2jsonImportList.length - 1];
-          code = code.replace(last[0], `${last[0]}${sideEffectCode}`);
+          // 如果注释了 ?dir2josn 行，那么 dir2jsonImportList 数组有可能为空
+          if (dir2jsonImportList.length) {
+            const importNameList = dir2jsonImportList.map((item) => item[1]);
+            // fix bug: 加入try catch，用并联的方式注入 effectcode，防止报错卡死
+            let sideEffectCode = ``;
+            importNameList.map((item) => {
+              sideEffectCode += `\ntry {
+                window.dir2jsonSideEffect = ${item}
+              } catch (error) {};\n`;
+            });
+            const last = dir2jsonImportList[dir2jsonImportList.length - 1];
+            code = code.replace(last[0], `${last[0]}${sideEffectCode}`);
+          }
         }
         return { code };
       },
