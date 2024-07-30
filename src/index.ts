@@ -4,7 +4,7 @@ import { writeFile } from "node:fs/promises";
 import type { PluginOption } from "vite";
 // todo(replace): too large bundle after 'isPackageExists' imported
 import { isPackageExists } from "local-pkg";
-import { decodeQuery, setObject, traverseDir } from "./utils";
+import { decodeQuery, getRelativePath, setObject, traverseDir } from "./utils";
 import {
   dtsFileFooter,
   dtsFileHeader,
@@ -93,6 +93,7 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
         // Recursively traverse directory and assemble json data
         const res = {};
         let importStr = "";
+        const importNameInterfaceMap: { [key: string]: string } = {};
         await traverseDir(dirPath, extFilter, (filePath, rootDirPath) => {
           // assemble import statements
           const absolutePath = filePath.replace(root, "");
@@ -102,6 +103,9 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
 
           if (param.lazy) {
             importStr += `const ${importVarName} = () => import("${absolutePath}");\n`;
+            // 获取相对路径，方便跳转对应的文件
+            let relativePath = getRelativePath(dtsFilePath, filePath);
+            importNameInterfaceMap[importVarName] = relativePath;
           } else {
             importStr += `import ${importVarName} from "${absolutePath}";\n`;
           }
@@ -131,10 +135,14 @@ export default ${finalDataCode}`;
         if (!!dts) {
           // the last-level directory name and query parameter will be used as the module name
           const moduleTag = id.split(path.sep).pop()!;
-          const reg = new RegExp(`"${replaceTag}.*?${replaceTag}"(,)?`, "g");
+          const reg = new RegExp(`"${replaceTag}(.*?)${replaceTag}",?`, "g");
           let jsonInterface: string;
           if (param.lazy) {
-            jsonInterface = dataCode.replaceAll(reg, `() => Promise<any>;`);
+            jsonInterface = dataCode.replaceAll(reg, (...args) => {
+              return `() => Promise<typeof import("${
+                importNameInterfaceMap[args[1]]
+              }")>;`;
+            });
           } else {
             jsonInterface = dataCode.replaceAll(reg, "string;");
           }

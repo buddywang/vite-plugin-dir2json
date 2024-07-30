@@ -104,3 +104,24 @@ export const decodeQuery = (queryStr: string) => {
   });
   return param;
 };
+
+/**
+ * 返回 toFilePath 相对 fromFilePath 的相对路径，
+ * @param fromFilePath 相对的文件路径
+ * @param toFilePath 要计算的文件路径
+ * @returns toFilePath 相对 fromFilePath 的相对路径
+ */
+export const getRelativePath = (fromFilePath: string, toFilePath: string) => {
+  const fromDirName = path.dirname(fromFilePath);
+  const toDirName = path.dirname(toFilePath);
+  const toFileName = path.basename(toFilePath);
+  let relativeDirPath = path.relative(fromDirName, toDirName);
+  let relativePath = path.join(relativeDirPath, toFileName);
+
+  if (!relativePath.startsWith(".")) {
+    // 为了能触发 按住command + 点击 跳转文件
+    relativePath = "./" + relativePath;
+  }
+
+  return relativePath;
+};
