@@ -13,6 +13,9 @@ import {
 } from "./constant";
 import { Dir2jsonOptions, IDtsContext, IQueryParam } from "./type";
 
+// 自增的数字，用于生成合法唯一的变量名
+let selfIncreasingNum = 0;
+
 function dir2json(options: Dir2jsonOptions = {}): PluginOption {
   let root = path.resolve("");
   let mode = process.env.NODE_ENV;
@@ -94,9 +97,8 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
           // assemble import statements
           const absolutePath = filePath.replace(root, "");
           // The name of the imported variable
-          const importVarName = absolutePath
-            .replaceAll(path.sep, "_")
-            .replace(".", "_");
+          // fix bug: 为了保证 importVarName 合法且唯一，这里采用自增数字作为标识
+          const importVarName = `__${selfIncreasingNum++}__`;
 
           if (param.lazy) {
             importStr += `const ${importVarName} = () => import("${absolutePath}");\n`;
