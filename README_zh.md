@@ -171,7 +171,7 @@ console.log(Views);
 
 当您的项目是 ts 项目时，`vite-plugin-dir2json`会默认开启 ts 支持，本地开发环境会自动生成`dir2json.d.ts`文件，让您获取正确的类型提示如下(可通过配置 `options.dts`更改默认配置)：
 
-![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code2.png)
+![image](./img/code2.png)
 
 为了获得正确的类型提示，请确保以下步骤：
 
@@ -193,11 +193,11 @@ console.log(Views);
 
 1. 自动生成的 `dir2json.d.ts` 文件格式如下:
 
-![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code3.png)
+![image](./img/code3.png)
 
 可以看到，最后一级目录名和 query 会作为模块名，所以当最后一级目录名相同时，为了防止类型声明被覆盖，可以添加查询参数来保证模块名称是唯一的，如下 `&1` ：
 
-![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code4.png)
+![image](./img/code4.png)
 
 2. 默认情况下，返回的 json 对象 key 是不带文件后缀信息的，但当同一目录下存在符合要求的同名不同后缀的文件时，为了区分这些文件，这些文件对应的 key 会拼上后缀信息，如下：
 
