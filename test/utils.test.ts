@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   decodeQuery,
-  getFileNameNotExt,
+  getFileNameWithoutExt,
+  getFileNameWithExt,
   isFileName,
   isSupportExt,
   setObject,
@@ -16,8 +17,12 @@ describe("utils", () => {
     expect(isFileName("abc.test.ts")).toBe(true);
   });
 
-  it("getFileNameNotExt", () => {
-    expect(getFileNameNotExt("xxx.png")).toBe("xxx");
+  it("getFileNameWithoutExt", () => {
+    expect(getFileNameWithoutExt("xxx.png")).toBe("xxx");
+  });
+
+  it("getFileNameWithExt", () => {
+    expect(getFileNameWithExt("xxx.png")).toBe("xxxPNG");
   });
 
   it("isSupportExt", () => {
@@ -27,11 +32,23 @@ describe("utils", () => {
   });
 
   it("setObject", () => {
-    const obj = {};
-    setObject(obj, "/aa/bb/11.png", "val1", () => {});
-    setObject(obj, "/22.webp", "val2", () => {});
-    setObject(obj, "/22.webp", "val3", () => {});
-    const expectObj = { aa: { bb: { "11": "val1" } }, "22": "val3" };
+    let obj = {};
+    setObject(obj, "/aa/bb/11.png", "$$__1__png__$$");
+    setObject(obj, "/aa/bb/11.jpg", "$$__2__jpg__$$");
+    setObject(obj, "/aa/bb/22.png", "$$__3__png__$$");
+    setObject(obj, "/aa.png", "$$__4__png__$$");
+    // 去掉 symbol 值
+    obj = JSON.parse(JSON.stringify(obj));
+    const expectObj = {
+      aa: {
+        bb: {
+          "11PNG": "$$__1__png__$$",
+          "11JPG": "$$__2__jpg__$$",
+          "22": "$$__3__png__$$",
+        },
+      },
+      aaPNG: "$$__4__png__$$",
+    };
     expect(obj).toEqual(expectObj);
   });
 

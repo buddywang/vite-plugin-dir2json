@@ -29,6 +29,8 @@ declare module "*home?dir2json&1" {
 
 declare module "*home?dir2json" {
   const json: {
+  "closePNG": string;
+  "closeSVG": string;
   "h5": {
     "home1": {
       "home1": string;

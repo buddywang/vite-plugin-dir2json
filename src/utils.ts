@@ -4,7 +4,12 @@ import { IQueryParam } from "./type";
 
 // helper
 export const isFileName = (str: string) => str.includes(".");
-export const getFileNameNotExt = (str: string) => str.split(".").shift() || "";
+export const getFileNameWithoutExt = (str: string) =>
+  str.split(".").shift() || "";
+export const getFileNameWithExt = (str: string) => {
+  const [fileName, ext] = str.split(".");
+  return fileName + ext.toLocaleUpperCase();
+};
 export const isSupportExt = (fileName: string, supportExtList: string[]) => {
   let res = false;
   supportExtList.forEach((item) => {
@@ -16,28 +21,35 @@ export const isSupportExt = (fileName: string, supportExtList: string[]) => {
 };
 
 /**
- * eg: when call setObject(obj, '/h5/home/home1.png', value), it will get `obj.h5.home.home1 = value`
+ * eg: normally, when call setObject(obj, '/h5/home/home1.png', value), it will get `obj.h5.home.home1 = value`
  * @param obj obj
  * @param keyPathInfo absolute path
  * @param value obj key's value
  */
-export const setObject = (
-  obj: any,
-  keyPathInfo: string,
-  value: string,
-  onError: () => void
-) => {
+export const setObject = (obj: any, keyPathInfo: string, value: string) => {
   const temp = keyPathInfo.split(path.sep).filter((item: string) => !!item);
   let tempObj = obj;
   while (temp.length) {
     const item = temp.shift()!;
     if (isFileName(item)) {
       // file
-      const keyName = getFileNameNotExt(item);
+      // fix bug:
+      // 一般情况下，keyname不带文件后缀信息，当同一目录下存在同名但不同后缀的文件时，这时文件对应的keyname会带上文件后缀做唯一标识
+      let keyName = getFileNameWithoutExt(item);
 
-      // check duplicate names of files and directories
       if (tempObj[keyName]) {
-        onError();
+        if (typeof tempObj[keyName] == "string") {
+          // 已有keyName是文件，把 keyName 转成带后缀形式
+          const prevExt = tempObj[keyName].split("__")[2];
+          const prevNewKey = keyName + prevExt.toLocaleUpperCase();
+          tempObj[prevNewKey] = tempObj[keyName];
+          tempObj[keyName] = Symbol("not use"); // strigify 时会去掉 value为symbol的值
+        } else {
+          // 已有keyName是目录，不做处理
+        }
+
+        // keyName 带上文件后缀做唯一标识
+        keyName = getFileNameWithExt(item);
       }
 
       tempObj[keyName] = value;

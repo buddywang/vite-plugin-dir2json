@@ -13,9 +13,6 @@ import {
 } from "./constant";
 import { Dir2jsonOptions, IDtsContext, IQueryParam } from "./type";
 
-// 自增的数字，用于生成合法唯一的变量名
-let selfIncreasingNum = 0;
-
 function dir2json(options: Dir2jsonOptions = {}): PluginOption {
   let root = path.resolve("");
   let mode = process.env.NODE_ENV;
@@ -94,12 +91,16 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
         const res = {};
         let importStr = "";
         const importNameInterfaceMap: { [key: string]: string } = {};
+        // 自增的数字，用于生成合法唯一的变量名
+        let selfIncreasingNum = 0;
         await traverseDir(dirPath, extFilter, (filePath, rootDirPath) => {
           // assemble import statements
           const absolutePath = filePath.replace(root, "");
           // The name of the imported variable
           // fix bug: 为了保证 importVarName 合法且唯一，这里采用自增数字作为标识
-          const importVarName = `__${selfIncreasingNum++}__`;
+          // fix bug: importVarName带上文件ext信息， setObject 里可能会用到
+          const fileExt = absolutePath.split(".").pop();
+          const importVarName = `__${selfIncreasingNum++}__${fileExt}__`;
 
           if (param.lazy) {
             importStr += `const ${importVarName} = () => import("${absolutePath}");\n`;
@@ -114,12 +115,7 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
           setObject(
             res,
             filePath.replace(rootDirPath, ""),
-            `${replaceTag}${importVarName}${replaceTag}`,
-            () => {
-              pluginContext.error(
-                `files and directories with the same name are not allowed in the same directory：${absolutePath}`
-              );
-            }
+            `${replaceTag}${importVarName}${replaceTag}`
           );
         });
 
@@ -153,7 +149,7 @@ export default ${finalDataCode}`;
 
           // generate dts file
           let str = dtsFileHeader;
-          // 优化: 保证 dtsContent 数组有序，保证dts文件结构稳定
+          // 优化: sort 保证 dtsContent 数组有序，保证dts文件结构稳定
           const dtsContent = Object.keys(dtsContext)
             .sort((a: string, b: string) => {
               return a > b ? -1 : 1;
