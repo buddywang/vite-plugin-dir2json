@@ -198,13 +198,17 @@ In order to properly hint types for import-dir2json variable：
 
 ### Notice
 
-The automatically generated `dir2json.d.ts` looks like this:
+1. The automatically generated `dir2json.d.ts` looks like this:
 
 ![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code3.png)
 
 As you can see, the last-level directory name and query parameter will be used as the module name, so when the last-level directory name is the same, in order to prevent type declaration overwriting, you can add the query parameter to ensure that the module name is unique, as follows `&1` :
 
 ![image](https://raw.githubusercontent.com/buddywang/vite-plugin-dir2json/main/img/code4.png)
+
+2. By default, the returned json object key does not have file suffix information, but when there are files with the same name and different suffixes that meet the requirements in the same directory, in order to distinguish these files, the keys corresponding to these files will be spelled with suffix information, as follows:
+
+![image](./img/code5.png)
 
 # [Example](./example/vite-vue-demo/vite.config.ts)
 
