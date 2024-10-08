@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "path";
 import { writeFile } from "node:fs/promises";
-import type { PluginOption } from "vite";
+import type { PluginOption, ViteDevServer } from "vite";
 // todo(replace): too large bundle after 'isPackageExists' imported
 import { isPackageExists } from "local-pkg";
 import { decodeQuery, getRelativePath, setObject, traverseDir } from "./utils";
@@ -12,6 +12,7 @@ import {
   defalutExtList,
 } from "./constant";
 import { Dir2jsonOptions, IDtsContext, IQueryParam } from "./type";
+import { watchDir } from "./chokidar";
 
 function dir2json(options: Dir2jsonOptions = {}): PluginOption {
   let root = path.resolve("");
@@ -20,10 +21,35 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
 
   // dts
   const dtsContext: IDtsContext = {};
+  let devServer: ViteDevServer;
   const { dts = isPackageExists("typescript") } = options;
+  const shouldGenDts = mode == "development" && !!dts;
   let dtsFilePath: string;
+  const refreshDtsFile = () => {
+    // refresh dts file
+    let str = dtsFileHeader;
+    // 优化: sort 保证 dtsContent 数组有序，保证dts文件结构稳定
+    const dtsContent = Object.keys(dtsContext)
+      .sort((a: string, b: string) => {
+        return a > b ? -1 : 1;
+      })
+      .map((key) => {
+        return dtsContext[key];
+      });
+
+    dtsContent.forEach(({ moduleTag, jsonInterface }) => {
+      str += `
+declare module "*${moduleTag}" {
+  const json: ${jsonInterface};
+  export default json;
+}
+`;
+    });
+    str += dtsFileFooter;
+    writeFile(dtsFilePath, str);
+  };
   // initialize dts files
-  if (!!dts) {
+  if (shouldGenDts) {
     dtsFilePath =
       typeof dts == "string"
         ? path.join(root, dts)
@@ -32,12 +58,15 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
     // 不存在dts文件时，初始化dts文件
     // init dts file when not exist dts file
     if (!existsSync(dtsFilePath)) {
-      writeFile(dtsFilePath, dtsFileHeader + dtsFileFooter);
+      refreshDtsFile();
     }
   }
 
   return {
     name: "vite-plugin-dir2json",
+    configureServer(server) {
+      devServer = server;
+    },
     resolveId: {
       order: "post",
       async handler(source: string, importer: string | undefined) {
@@ -87,90 +116,98 @@ function dir2json(options: Dir2jsonOptions = {}): PluginOption {
           extFilter = temp;
         }
 
-        // Recursively traverse directory and assemble json data
-        const res = {};
-        let importStr = "";
-        const importNameInterfaceMap: { [key: string]: string } = {};
-        // 自增的数字，用于生成合法唯一的变量名
-        let selfIncreasingNum = 0;
-        await traverseDir(dirPath, extFilter, (filePath, rootDirPath) => {
-          // assemble import statements
-          const absolutePath = filePath.replace(root, "");
-          // The name of the imported variable
-          // fix bug: 为了保证 importVarName 合法且唯一，这里采用自增数字作为标识
-          // fix bug: importVarName带上文件ext信息， setObject 里可能会用到
-          const fileExt = absolutePath.split(".").pop();
-          const importVarName = `__${selfIncreasingNum++}__${fileExt}__`;
+        const parseDir = async (dirPath: string, extFilter: string[]) => {
+          // Recursively traverse directory and assemble json data
+          const res = {};
+          let importStr = "";
 
-          if (param.lazy) {
-            importStr += `const ${importVarName} = () => import("${absolutePath}");\n`;
-            // 获取相对路径，方便跳转对应的文件
-            let relativePath = getRelativePath(dtsFilePath, filePath);
-            importNameInterfaceMap[importVarName] = relativePath;
-          } else {
-            importStr += `import ${importVarName} from "${absolutePath}";\n`;
+          const importNameInterfaceMap: { [key: string]: string } = {};
+          // 自增的数字，用于生成合法唯一的变量名
+          let selfIncreasingNum = 0;
+          await traverseDir(dirPath, extFilter, (filePath, rootDirPath) => {
+            // assemble import statements
+            const absolutePath = filePath.replace(root, "");
+            // The name of the imported variable
+            // fix bug: 为了保证 importVarName 合法且唯一，这里采用自增数字作为标识
+            // fix bug: importVarName带上文件ext信息， setObject 里可能会用到
+            const fileExt = absolutePath.split(".").pop();
+            const importVarName = `__${selfIncreasingNum++}__${fileExt}__`;
+
+            if (param.lazy) {
+              importStr += `const ${importVarName} = () => import("${absolutePath}");\n`;
+
+              if (shouldGenDts) {
+                // 获取相对路径，方便跳转对应的文件
+                let relativePath = getRelativePath(dtsFilePath, filePath);
+                importNameInterfaceMap[importVarName] = relativePath;
+              }
+            } else {
+              importStr += `import ${importVarName} from "${absolutePath}";\n`;
+            }
+
+            // assemble json data
+            setObject(
+              res,
+              filePath.replace(rootDirPath, ""),
+              `${replaceTag}${importVarName}${replaceTag}`
+            );
+          });
+          const jsonStr = `${JSON.stringify(res, null, "  ")}`;
+
+          if (shouldGenDts) {
+            // 更新dtsContext
+            // the last-level directory name and query parameter will be used as the module name
+            const moduleTag = id.split(path.sep).pop()!;
+            const reg = new RegExp(`"${replaceTag}(.*?)${replaceTag}",?`, "g");
+            let jsonInterface: string;
+            if (param.lazy) {
+              // import(具体路径) 方便跳转文件
+              jsonInterface = jsonStr.replaceAll(reg, (...args) => {
+                return `() => Promise<typeof import("${
+                  importNameInterfaceMap[args[1]]
+                }")>;`;
+              });
+            } else {
+              jsonInterface = jsonStr.replaceAll(reg, "string;");
+            }
+            dtsContext[moduleTag] = {
+              moduleTag,
+              jsonInterface,
+            };
+
+            // refresh dts file
+            refreshDtsFile();
+            // 监听目录文件变化，重新解析目录数据，更新 dts
+            watchDir(dirPath, extFilter, async () => {
+              // 让虚拟模块缓存失效
+              const mod = devServer.moduleGraph.getModuleById(id);
+              mod && devServer.reloadModule(mod);
+              // ??? hmr需要刷新才能生效，发送消息通知客户端刷新
+              devServer.ws.send(`dir2jsonUpdate:${id}`);
+
+              // 刷新 dts 文件
+              await parseDir(dirPath, extFilter);
+            });
           }
 
-          // assemble json data
-          setObject(
-            res,
-            filePath.replace(rootDirPath, ""),
-            `${replaceTag}${importVarName}${replaceTag}`
-          );
-        });
+          const finalDataCode = jsonStr
+            .replaceAll(`"${replaceTag}`, "")
+            .replaceAll(`${replaceTag}"`, "");
+          let codeStr = `${importStr} 
+if (import.meta.hot) {
+  import.meta.hot.on('dir2jsonUpdate:${id}', () => {
+    location.reload();
+  })
+};
 
-        // return code string
-        const dataCode = `${JSON.stringify(res, null, "  ")}`;
-        const finalDataCode = dataCode
-          .replaceAll(`"${replaceTag}`, "")
-          .replaceAll(`${replaceTag}"`, "");
-        let code = `${importStr} 
 export default ${finalDataCode}`;
 
-        // refresh dts file
-        if (!!dts) {
-          // the last-level directory name and query parameter will be used as the module name
-          const moduleTag = id.split(path.sep).pop()!;
-          const reg = new RegExp(`"${replaceTag}(.*?)${replaceTag}",?`, "g");
-          let jsonInterface: string;
-          if (param.lazy) {
-            jsonInterface = dataCode.replaceAll(reg, (...args) => {
-              return `() => Promise<typeof import("${
-                importNameInterfaceMap[args[1]]
-              }")>;`;
-            });
-          } else {
-            jsonInterface = dataCode.replaceAll(reg, "string;");
-          }
-          dtsContext[moduleTag] = {
-            moduleTag,
-            jsonInterface,
-          };
+          return codeStr;
+        };
 
-          // generate dts file
-          let str = dtsFileHeader;
-          // 优化: sort 保证 dtsContent 数组有序，保证dts文件结构稳定
-          const dtsContent = Object.keys(dtsContext)
-            .sort((a: string, b: string) => {
-              return a > b ? -1 : 1;
-            })
-            .map((key) => {
-              return dtsContext[key];
-            });
+        const codeStr = await parseDir(dirPath, extFilter);
 
-          dtsContent.forEach(({ moduleTag, jsonInterface }) => {
-            str += `
-declare module "*${moduleTag}" {
-  const json: ${jsonInterface};
-  export default json;
-}
-`;
-          });
-          str += dtsFileFooter;
-          writeFile(dtsFilePath, str);
-        }
-
-        return code;
+        return codeStr;
       }
 
       return null; // other
@@ -180,7 +217,7 @@ declare module "*${moduleTag}" {
       handler(code) {
         // Add sideEffectCode in files using dir2json-import to avoid tree-shaking in development mode
         // For dts files generated in development mode
-        if (mode == "development" && !!dts && code.includes("?dir2json")) {
+        if (shouldGenDts && code.includes("?dir2json")) {
           // fix bug: 注释的行不用生成对应的类型声明
           // fix bug: 更新正则
           // (?<!\/\/\s*) 后行断言: 过滤注释行
