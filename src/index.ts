@@ -182,7 +182,8 @@ declare module "*${moduleTag}" {
               // 让虚拟模块缓存失效
               const mod = devServer.moduleGraph.getModuleById(id);
               mod && devServer.reloadModule(mod);
-              // ??? hmr需要刷新才能生效，发送消息通知客户端刷新
+              // ??? hmr首次生效，后续没有生效
+              // 需要刷新才能生效，发送消息通知客户端刷新
               devServer.ws.send(`dir2jsonUpdate:${id}`);
 
               // 刷新 dts 文件

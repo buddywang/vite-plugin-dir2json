@@ -9,6 +9,7 @@
 - [x] 将目录结构转换为包含指定后缀格式的文件路径的 JSON 数据
 - [x] 默认返回静态路径，支持通过 `lazy` query 指定返回动态 import
 - [x] 支持通过 query 或 options 自定义文件格式过滤，`ext`和`extg` query 会覆盖默认支持的 ext 列表
+- [x] 支持 hmr，当目录文件变更时，自动更新 dts 文件、自动更新虚拟模块
 
 ```js
 import homeJson from "/path/to/home?dir2json&ext=.vue,.ts&lazy";

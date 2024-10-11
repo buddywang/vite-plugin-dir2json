@@ -30,6 +30,8 @@ dir2json({
 });
 ```
 
+- [x] Support hmr, automatically update dts files and virtual modules when directory files change.
+
 For example, for this structure of directory:
 
 ```bash
